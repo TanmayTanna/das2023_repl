@@ -41,13 +41,13 @@ DCdensity(data_fb$Win_Margin)
 DCdensity(data_fnb$Win_Margin)
 
 ##Prepare data for RDD 
-data_f17 <- data %>%
+data_f17e <- data %>%
   filter(Assembly_No == 17, Poll_No == 0, Position == 1) %>%
   mutate(Constituency_Name = paste(Constituency_Name, State_Name, sep = "_")) %>%
   select(Constituency_Name, Electors) %>%
   rename(Electors_19 = Electors)
 
-data_f16 <- data %>%
+data_f16e <- data %>%
   filter(Assembly_No == 16, Poll_No == 0, Position == 1) %>%
   mutate(Constituency_Name = paste(Constituency_Name, State_Name, sep = "_")) %>%
   select(Constituency_Name, Electors) %>%
@@ -74,9 +74,25 @@ data_e <- inner_join(data_f16e, data_f17e, by = "Constituency_Name") %>%
 
 data_e <- inner_join(data_e, data_g, by = 'Constituency_Name')
 
+#Run RDD test
 x<-data_e$Win_Margin
 y<-data_e$g
 res<-RDestimate(y~x, bw=0.107)
+plot(res)
+abline((sum(data_e$Electors_19) - sum(data_e$Electors_14))/sum(data_e$Electors_14), 0)
 print(res$est)
 print(res$se)
 print(res$p)
+
+#Run RDD test removing some outliers
+data_ex = data_e %>% filter(!(Win_Margin < 0) | !(Win_Margin > -0.015) | !(g > 0.15))
+
+x<-data_ex$Win_Margin
+y<-data_ex$g
+res<-RDestimate(y~x, bw=0.107)
+plot(res)
+abline((sum(data_e$Electors_19) - sum(data_e$Electors_14))/sum(data_e$Electors_14), 0)
+print(res$est)
+print(res$se)
+print(res$p)
+
